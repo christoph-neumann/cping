@@ -16,7 +16,7 @@
 
 
 (defn summarize
-  "Create the summary histogram of"
+  "Create the summary histogram"
   [good]
   (let [last_10 (max 0 (- good 50))
         first_50 (int (/ (+ (min 0 (- good 50)) 50) 10))]
@@ -38,19 +38,17 @@
 
   (let [host (first args)]
     (println (str "The host is: " host))
-    (let [sec (atom 0)
-          good (atom 0)]
-      (while true
-        (let [{:keys [out exit] :as result} (ping! host)]
-          (swap! sec inc)
-          (if (= exit 0) (swap! good inc))
-          (print (if (= exit 0) "#" "."))
-          (flush)
-          (if (= @sec 60)
-            (do
-              (println (summarize @good))
-              (reset! sec 0)
-              (reset! good 0)))
-          (Thread/sleep 500)))))
+    (loop [sec 1, good-old 0]
+      (let [{:keys [out exit] :as result} (ping! host)
+            good? (zero? exit)
+            good (if good? (inc good-old) good-old)
+            last? (= sec 60)]
+        (print (if good? "#" "."))
+        (flush)
+        (if last? (println (summarize good)))
+        (Thread/sleep 500)
+        (if last?
+          (recur 1 0)
+          (recur (inc sec) good)))))
 
   (System/exit 0))
