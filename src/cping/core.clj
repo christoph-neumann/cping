@@ -18,13 +18,13 @@
 (defn summarize
   "Create the summary histogram"
   [good]
-  (let [last_10 (max 0 (- good 50))
-        first_50 (int (/ (+ (min 0 (- good 50)) 50) 10))]
+  (let [last-10 (max 0 (- good 50))
+        first-50 (int (/ (+ (min 0 (- good 50)) 50) 10))]
     (format "|%s%s%s%s| %s"
-            (nstr first_50 "#")
-            (nstr (- 5 first_50) ".")
-            (nstr last_10 "%")
-            (nstr (- 10 last_10) ".")
+            (nstr first-50 "#")
+            (nstr (- 5 first-50) ".")
+            (nstr last-10 "%")
+            (nstr (- 10 last-10) ".")
             good)))
 
 
