@@ -1,6 +1,8 @@
 (ns cping.core
   (:gen-class)
-  (:require [clojure.java.shell :as shell :refer [sh]]))
+  (:require [clojure.java.shell :as shell :refer [sh]]
+            [clojure.core.async :refer [chan <!! >!!]]
+            [cping.scheduler :as scheduler]))
 
 
 (defn- ping!
@@ -28,6 +30,26 @@
             good)))
 
 
+(defn- ping-loop
+  "Ping the given host every time a tick arrives on the given channel. After 60
+  samples, print out a summary."
+  [host clock-chan]
+  (println (str "The host is: " host))
+  (loop [sec 1, good-old 0]
+    (<!! clock-chan)
+    (let [{:keys [out exit] :as result} (ping! host)
+          good? (zero? exit)
+          good (if good? (inc good-old) good-old)
+          last? (= sec 60)]
+      (print (if good? "#" "."))
+      (flush)
+      (if last?
+        (do
+          (println (summarize good))
+          (recur 1 0))
+        (recur (inc sec) good)))))
+
+
 (defn -main
   "Main method for the cping app."
   [& args]
@@ -36,19 +58,9 @@
       (println "usage: seeping ip_address")
       (System/exit 1)))
 
-  (let [host (first args)]
-    (println (str "The host is: " host))
-    (loop [sec 1, good-old 0]
-      (let [{:keys [out exit] :as result} (ping! host)
-            good? (zero? exit)
-            good (if good? (inc good-old) good-old)
-            last? (= sec 60)]
-        (print (if good? "#" "."))
-        (flush)
-        (if last? (println (summarize good)))
-        (Thread/sleep 500)
-        (if last?
-          (recur 1 0)
-          (recur (inc sec) good)))))
+  (let [host (first args)
+        clock (chan)]
+    (scheduler/periodically (fn [] (>!! clock :tick)) 0 1000)
+    (ping-loop host clock))
 
   (System/exit 0))
