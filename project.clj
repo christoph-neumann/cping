@@ -4,7 +4,8 @@
   :license {:name "Apache Public License v2.0"
             :url "http://www.apache.org/licenses/LICENSE-2.0"}
   :dependencies [[org.clojure/clojure "1.5.1"]
-                 [org.clojure/core.async "0.1.267.0-0d7780-alpha"]]
+                 [org.clojure/core.async "0.1.267.0-0d7780-alpha"]
+                 [clj-time "0.6.0"]]
   :main ^:skip-aot cping.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}})
